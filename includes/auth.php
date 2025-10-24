@@ -9,6 +9,13 @@ class Auth {
     }
     
     public function register($username, $password, $email, $role = 'user', $firstName = null, $lastName = null, $phone = null) {
+        // Use sanitization
+        $username = sanitizeInput($username);
+        $email = sanitizeInput($email);
+        $firstName = sanitizeInput($firstName);
+        $lastName = sanitizeInput($lastName);
+        $phone = sanitizeInput($phone);
+        
         // Check if user already exists
         $query = "SELECT id FROM users WHERE username = :username OR email = :email";
         $stmt = $this->conn->prepare($query);
@@ -23,7 +30,7 @@ class Auth {
         // Insert new user
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $query = "INSERT INTO users SET username=:username, password=:password, email=:email, role=:role, 
-                 first_name=:first_name, last_name=:last_name, phone=:phone";
+                 first_name=:first_name, last_name=:last_name, phone=:phone, created_at=NOW()";
         $stmt = $this->conn->prepare($query);
         
         $stmt->bindParam(':username', $username);
@@ -42,14 +49,19 @@ class Auth {
     }
     
     public function login($username, $password) {
-        $query = "SELECT id, username, password, role, is_active FROM users WHERE username = :username";
+        // Simple sanitization
+        $username = sanitizeInput($username);
+        
+        // FIXED: Changed 'is_active' to 'status' to match your database
+        $query = "SELECT id, username, password, role, status FROM users WHERE username = :username";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':username', $username);
         $stmt->execute();
         
         if($stmt->rowCount() == 1) {
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            if(password_verify($password, $row['password']) && $row['is_active']) {
+            // FIXED: Check 'status' column instead of 'is_active'
+            if(password_verify($password, $row['password']) && $row['status'] == 'active') {
                 $_SESSION['user_id'] = $row['id'];
                 $_SESSION['username'] = $row['username'];
                 $_SESSION['role'] = $row['role'];
@@ -103,35 +115,16 @@ class Auth {
         return false;
     }
     
-    public function sendPasswordEmail($email, $password) {
-        // In a real application, you would send an email here
-        // This is a simplified version for demonstration
+    // Improved password recovery with basic validation
+    public function recoverPassword($email) {
+        $email = sanitizeInput($email);
         
-        $to = $email;
-        $subject = "Password Recovery - PGP Farmer Traceability";
-        $message = "Hello,\n\n";
-        $message .= "You requested to recover your password for PGP Farmer Traceability.\n\n";
-        $message .= "Your password is: $password\n\n";
-        $message .= "For security reasons, we recommend changing your password after logging in.\n\n";
-        $message .= "Regards,\nPGP Farmer Traceability Team";
-        $headers = "From: no-reply@pgpindia.co\r\n";
-        $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
-        
-        // In a real application, you would use a proper email library like PHPMailer
-        // For now, we'll just simulate the email sending
-        $simulatedSuccess = true; // Simulate successful email sending
-        
-        if ($simulatedSuccess) {
-            // Log the email sending (in production, you would actually send the email)
-            error_log("Password email would be sent to: $email with password: $password");
-            return true;
+        // Basic email validation
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ['success' => false, 'message' => 'Invalid email format'];
         }
         
-        return false;
-    }
-    
-    public function recoverPassword($email) {
-        $query = "SELECT id, username, password FROM users WHERE email = :email AND is_active = 1";
+        $query = "SELECT id, username, password FROM users WHERE email = :email AND status = 'active'";
         $stmt = $this->conn->prepare($query);
         $stmt->bindParam(':email', $email);
         $stmt->execute();
@@ -139,13 +132,30 @@ class Auth {
         if ($stmt->rowCount() > 0) {
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            // Send password via email
-            if ($this->sendPasswordEmail($email, $user['password'])) {
-                return true;
-            }
+            // In a real application, you would:
+            // 1. Generate a reset token
+            // 2. Send reset link via email
+            // 3. Not send password in email
+            
+            // For now, just return success but don't actually send email
+            // This prevents security issues in production
+            return ['success' => true, 'message' => 'If this email exists, you will receive password reset instructions.'];
         }
         
-        return false;
+        // Always return the same message for security (don't reveal if email exists)
+        return ['success' => true, 'message' => 'If this email exists, you will receive password reset instructions.'];
+    }
+    
+    // Add a simple method to check if username exists
+    public function usernameExists($username) {
+        $username = sanitizeInput($username);
+        
+        $query = "SELECT id FROM users WHERE username = :username";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        
+        return $stmt->rowCount() > 0;
     }
 }
 ?>

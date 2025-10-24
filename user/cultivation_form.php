@@ -135,6 +135,10 @@ try {
             border-radius: 5px;
             margin-bottom: 20px;
         }
+        
+        .geotag-section {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -160,8 +164,13 @@ try {
         <?php endif; ?>
 
         <?php if ($farmerData): ?>
-        <form action="save_cultivation.php" method="POST" enctype="multipart/form-data" class="form-container">
+        <form action="save_cultivation.php" method="POST" enctype="multipart/form-data" class="form-container" id="cultivationForm">
             <input type="hidden" name="farmer_id" value="<?php echo htmlspecialchars($farmerData['id']); ?>">
+            <input type="hidden" name="farmer_name" value="<?php echo htmlspecialchars($farmerData['farmer_name']); ?>">
+            <input type="hidden" name="farmer_code" value="<?php echo htmlspecialchars($farmerData['farmer_code']); ?>">
+            <input type="hidden" name="district" value="<?php echo htmlspecialchars($farmerData['district']); ?>">
+            <input type="hidden" name="state" value="<?php echo htmlspecialchars($farmerData['state']); ?>">
+            <input type="hidden" name="village" value="<?php echo htmlspecialchars($farmerData['village']); ?>">
             
             <!-- FARMER INFORMATION -->
             <h5 class="section-title"><i class="fas fa-user-circle me-2"></i> FARMER INFORMATION</h5>
@@ -169,27 +178,22 @@ try {
                 <div class="col-md-6">
                     <label class="form-label">Farmer Name</label>
                     <div class="autofilled-value"><?php echo htmlspecialchars($farmerData['farmer_name']); ?></div>
-                    <input type="hidden" name="farmer_name" value="<?php echo htmlspecialchars($farmerData['farmer_name']); ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Farmer Code</label>
                     <div class="autofilled-value"><?php echo htmlspecialchars($farmerData['farmer_code']); ?></div>
-                    <input type="hidden" name="farmer_code" value="<?php echo htmlspecialchars($farmerData['farmer_code']); ?>">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">District</label>
                     <div class="autofilled-value"><?php echo htmlspecialchars($farmerData['district']); ?></div>
-                    <input type="hidden" name="district" value="<?php echo htmlspecialchars($farmerData['district']); ?>">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">State</label>
                     <div class="autofilled-value"><?php echo htmlspecialchars($farmerData['state']); ?></div>
-                    <input type="hidden" name="state" value="<?php echo htmlspecialchars($farmerData['state']); ?>">
                 </div>
                 <div class="col-md-4">
                     <label class="form-label">Village</label>
                     <div class="autofilled-value"><?php echo htmlspecialchars($farmerData['village']); ?></div>
-                    <input type="hidden" name="village" value="<?php echo htmlspecialchars($farmerData['village']); ?>">
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Linked with FPC/Individual</label>
@@ -240,20 +244,23 @@ try {
                     <input type="file" class="form-control" name="land_docs" accept=".pdf,.jpg,.png">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Geotagging</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="land_geotag" id="landGeotagInput" placeholder="Latitude, Longitude">
-                        <button type="button" class="btn geotag-btn" onclick="captureGeolocation('landGeotagInput')">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </button>
+                    <label class="form-label">Land Geotag</label>
+                    <div class="geotag-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="land_geotag" id="landGeotagInput" placeholder="Latitude, Longitude">
+                            <button type="button" class="btn geotag-btn" onclick="captureGeolocation('landGeotagInput')">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <input type="file" class="form-control" name="land_geotag_photo" accept="image/*" placeholder="Upload geotag photo">
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Geotag Photo</label>
-                    <input type="file" class="form-control" name="geotag_photo" accept="image/*">
+                    <label class="form-label">Land Photo</label>
+                    <input type="file" class="form-control" name="land_photo" accept="image/*">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Video</label>
+                    <label class="form-label">Land Video</label>
                     <input type="file" class="form-control" name="land_video" accept="video/*">
                 </div>
                 <div class="col-12">
@@ -281,12 +288,15 @@ try {
                     <input type="date" class="form-control" name="collection_date" id="collectionDate" disabled>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Add Geotag</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="soil_geotag" id="soilGeotag" placeholder="Latitude, Longitude" disabled>
-                        <button type="button" class="btn geotag-btn" onclick="captureGeolocation('soilGeotag')" disabled>
-                            <i class="fas fa-map-marker-alt"></i>
-                        </button>
+                    <label class="form-label">Soil Geotag</label>
+                    <div class="geotag-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="soil_geotag" id="soilGeotag" placeholder="Latitude, Longitude" disabled>
+                            <button type="button" class="btn geotag-btn" onclick="captureGeolocation('soilGeotag')" disabled>
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <input type="file" class="form-control" name="soil_geotag_photo" accept="image/*" disabled placeholder="Upload geotag photo">
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -294,11 +304,11 @@ try {
                     <input type="text" class="form-control" name="collected_by" id="collectedBy" disabled>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Photo</label>
+                    <label class="form-label">Collection Photo</label>
                     <input type="file" class="form-control" name="collection_photo" id="collectionPhoto" accept="image/*" disabled>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Video</label>
+                    <label class="form-label">Collection Video</label>
                     <input type="file" class="form-control" name="collection_video" id="collectionVideo" accept="video/*" disabled>
                 </div>
                 <div class="col-md-4">
@@ -438,26 +448,29 @@ try {
                     <label class="form-label">Date</label>
                     <input type="date" class="form-control" name="sowing_date" id="sowingDate" disabled>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Add Geotag</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="sowing_geotag" id="sowingGeotag" placeholder="Latitude, Longitude" disabled>
-                        <button type="button" class="btn geotag-btn" onclick="captureGeolocation('sowingGeotag')" disabled>
-                            <i class="fas fa-map-marker-alt"></i>
-                        </button>
+                <div class="col-md-4">
+                    <label class="form-label">Sowing Geotag</label>
+                    <div class="geotag-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="sowing_geotag" id="sowingGeotag" placeholder="Latitude, Longitude" disabled>
+                            <button type="button" class="btn geotag-btn" onclick="captureGeolocation('sowingGeotag')" disabled>
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <input type="file" class="form-control" name="sowing_geotag_photo" accept="image/*" disabled placeholder="Upload geotag photo">
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label">Photo</label>
+                <div class="col-md-6">
+                    <label class="form-label">Sowing Photo</label>
                     <input type="file" class="form-control" name="sowing_photo" id="sowingPhoto" accept="image/*" disabled>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Sowing Video</label>
+                    <input type="file" class="form-control" name="sowing_video" id="sowingVideo" accept="video/*" disabled>
                 </div>
                 <div class="col-12">
                     <label class="form-label">Remark</label>
                     <textarea class="form-control" name="sowing_remark" id="sowingRemark" rows="2" disabled></textarea>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Video</label>
-                    <input type="file" class="form-control" name="sowing_video" id="sowingVideo" accept="video/*" disabled>
                 </div>
                 <div class="col-md-5">
                     <label class="form-label">Training Provided</label>
@@ -499,19 +512,23 @@ try {
                     <label class="form-label">Date</label>
                     <input type="date" class="form-control" name="monitoring_date_1">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Add Geotag Photo</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="monitoring_geotag_1" placeholder="Latitude, Longitude">
-                        <button type="button" class="btn geotag-btn" onclick="captureGeolocation('monitoring_geotag_1')">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </button>
+                <div class="col-md-7">
+                    <label class="form-label">Monitoring Geotag 1</label>
+                    <div class="geotag-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="monitoring_geotag_1" placeholder="Latitude, Longitude">
+                            <button type="button" class="btn geotag-btn" onclick="captureGeolocation('monitoring_geotag_1')">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <input type="file" class="form-control" name="monitoring_geotag_photo_1" accept="image/*" placeholder="Upload geotag photo">
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12">
                     <label class="form-label">Notes</label>
                     <input type="text" class="form-control" name="monitoring_notes_1">
                 </div>
+                
                 <div class="col-md-3">
                     <label class="form-label">Monitoring Visit – 2</label>
                     <input type="text" class="form-control" name="monitoring_officer_2" placeholder="Monitoring Officer">
@@ -520,16 +537,19 @@ try {
                     <label class="form-label">Date</label>
                     <input type="date" class="form-control" name="monitoring_date_2">
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label">Add Geotag Photo</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="monitoring_geotag_2" placeholder="Latitude, Longitude">
-                        <button type="button" class="btn geotag-btn" onclick="captureGeolocation('monitoring_geotag_2')">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </button>
+                <div class="col-md-7">
+                    <label class="form-label">Monitoring Geotag 2</label>
+                    <div class="geotag-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="monitoring_geotag_2" placeholder="Latitude, Longitude">
+                            <button type="button" class="btn geotag-btn" onclick="captureGeolocation('monitoring_geotag_2')">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <input type="file" class="form-control" name="monitoring_geotag_photo_2" accept="image/*" placeholder="Upload geotag photo">
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-12">
                     <label class="form-label">Notes</label>
                     <input type="text" class="form-control" name="monitoring_notes_2">
                 </div>
@@ -554,12 +574,15 @@ try {
                     <input type="date" class="form-control" name="harvesting_date" id="harvestingDate" disabled>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Add Geotag Photo</label>
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="harvesting_geotag" id="harvestingGeotag" placeholder="Latitude, Longitude" disabled>
-                        <button type="button" class="btn geotag-btn" onclick="captureGeolocation('harvestingGeotag')" disabled>
-                            <i class="fas fa-map-marker-alt"></i>
-                        </button>
+                    <label class="form-label">Harvesting Geotag</label>
+                    <div class="geotag-section">
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control" name="harvesting_geotag" id="harvestingGeotag" placeholder="Latitude, Longitude" disabled>
+                            <button type="button" class="btn geotag-btn" onclick="captureGeolocation('harvestingGeotag')" disabled>
+                                <i class="fas fa-map-marker-alt"></i>
+                            </button>
+                        </div>
+                        <input type="file" class="form-control" name="harvesting_geotag_photo" id="harvestingGeotagPhoto" accept="image/*" disabled placeholder="Upload geotag photo">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -575,7 +598,7 @@ try {
                     <input type="number" step="0.01" class="form-control" name="yield" id="yield" disabled>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Add Geotag Photo</label>
+                    <label class="form-label">Yield Photo</label>
                     <input type="file" class="form-control" name="yield_photo" id="yieldPhoto" accept="image/*" disabled>
                 </div>
                 <div class="col-md-3">
@@ -624,6 +647,52 @@ try {
     </div>
 
     <script>
+        // Handle form submission with AJAX
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Show loading state
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                
+                // Create FormData object
+                const formData = new FormData(form);
+                
+                // Submit via AJAX
+                fetch('save_cultivation.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Cultivation data saved successfully!');
+                        // Redirect to dashboard or cultivation list
+                        window.location.href = 'dashboard.php';
+                    } else {
+                        alert('Error: ' + data.message);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                })
+                .catch(error => {
+                    alert('Network error: ' + error);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                });
+            });
+        });
+
         // Capture geolocation
         function captureGeolocation(fieldId) {
             if (navigator.geolocation) {
@@ -645,16 +714,20 @@ try {
         // Toggle soil sample fields
         function toggleSoilSampleFields() {
             const isChecked = document.getElementById('soilSampleCollected').checked;
-            document.getElementById('sampleCodeId').disabled = !isChecked;
-            document.getElementById('collectionDate').disabled = !isChecked;
-            document.getElementById('soilGeotag').disabled = !isChecked;
-            document.getElementById('collectedBy').disabled = !isChecked;
-            document.getElementById('collectionPhoto').disabled = !isChecked;
-            document.getElementById('collectionVideo').disabled = !isChecked;
+            const fields = ['sampleCodeId', 'collectionDate', 'soilGeotag', 'collectedBy', 'collectionPhoto', 'collectionVideo'];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) field.disabled = !isChecked;
+            });
+            
+            // Enable geotag photo field
+            const geotagPhoto = document.querySelector('input[name="soil_geotag_photo"]');
+            if (geotagPhoto) geotagPhoto.disabled = !isChecked;
             
             // Enable geotag button
             const geotagBtn = document.querySelector('button[onclick="captureGeolocation(\'soilGeotag\')"]');
-            geotagBtn.disabled = !isChecked;
+            if (geotagBtn) geotagBtn.disabled = !isChecked;
         }
         
         // Toggle soil testing fields
@@ -702,33 +775,39 @@ try {
         // Toggle sowing fields
         function toggleSowingFields() {
             const isChecked = document.getElementById('sowing').checked;
-            document.getElementById('cropName').disabled = !isChecked;
-            document.getElementById('cropVariety').disabled = !isChecked;
-            document.getElementById('sowingDate').disabled = !isChecked;
-            document.getElementById('sowingGeotag').disabled = !isChecked;
-            document.getElementById('sowingPhoto').disabled = !isChecked;
-            document.getElementById('sowingRemark').disabled = !isChecked;
-            document.getElementById('sowingVideo').disabled = !isChecked;
+            const fields = ['cropName', 'cropVariety', 'sowingDate', 'sowingGeotag', 'sowingPhoto', 'sowingVideo', 'sowingRemark'];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) field.disabled = !isChecked;
+            });
+            
+            // Enable geotag photo field
+            const geotagPhoto = document.querySelector('input[name="sowing_geotag_photo"]');
+            if (geotagPhoto) geotagPhoto.disabled = !isChecked;
             
             // Enable geotag button
             const geotagBtn = document.querySelector('button[onclick="captureGeolocation(\'sowingGeotag\')"]');
-            geotagBtn.disabled = !isChecked;
+            if (geotagBtn) geotagBtn.disabled = !isChecked;
         }
         
         // Toggle harvesting fields
         function toggleHarvestingFields() {
             const isChecked = document.getElementById('harvesting').checked;
-            document.getElementById('harvestingDate').disabled = !isChecked;
-            document.getElementById('harvestingGeotag').disabled = !isChecked;
-            document.getElementById('cropDetails').disabled = !isChecked;
-            document.getElementById('totalQuantity').disabled = !isChecked;
-            document.getElementById('yield').disabled = !isChecked;
-            document.getElementById('yieldPhoto').disabled = !isChecked;
-            document.getElementById('cropStatus').disabled = !isChecked;
+            const fields = ['harvestingDate', 'harvestingGeotag', 'cropDetails', 'totalQuantity', 'yield', 'yieldPhoto', 'cropStatus'];
+            
+            fields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) field.disabled = !isChecked;
+            });
+            
+            // Enable geotag photo field
+            const geotagPhoto = document.getElementById('harvestingGeotagPhoto');
+            if (geotagPhoto) geotagPhoto.disabled = !isChecked;
             
             // Enable geotag button
             const geotagBtn = document.querySelector('button[onclick="captureGeolocation(\'harvestingGeotag\')"]');
-            geotagBtn.disabled = !isChecked;
+            if (geotagBtn) geotagBtn.disabled = !isChecked;
         }
     </script>
 </body>

@@ -33,45 +33,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $full_name = trim($_POST['full_name']);
         $role = $_POST['role'];
         
-        try {
-            // Check if username or email already exists
-            $checkQuery = "SELECT id FROM users WHERE username = :username OR email = :email";
-            $checkStmt = $conn->prepare($checkQuery);
-            $checkStmt->bindParam(':username', $username);
-            $checkStmt->bindParam(':email', $email);
-            $checkStmt->execute();
-            
-            if ($checkStmt->rowCount() > 0) {
-                $error = "Username or email already exists!";
-            } else {
-                // Hash password
-                $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        // Basic validation
+        if (empty($username) || empty($email) || empty($password)) {
+            $error = "Please fill in all required fields.";
+        } else {
+            try {
+                // Check if username or email already exists
+                $checkQuery = "SELECT id FROM users WHERE username = :username OR email = :email";
+                $checkStmt = $conn->prepare($checkQuery);
+                $checkStmt->bindParam(':username', $username);
+                $checkStmt->bindParam(':email', $email);
+                $checkStmt->execute();
                 
-                // Check if full_name column exists
-                $columnCheck = $conn->query("SHOW COLUMNS FROM users LIKE 'full_name'");
-                $hasFullName = $columnCheck->rowCount() > 0;
-                
-                if ($hasFullName) {
-                    $insertQuery = "INSERT INTO users (username, email, password, full_name, role) 
-                                   VALUES (:username, :email, :password, :full_name, :role)";
-                    $insertStmt = $conn->prepare($insertQuery);
-                    $insertStmt->bindParam(':full_name', $full_name);
+                if ($checkStmt->rowCount() > 0) {
+                    $error = "Username or email already exists!";
                 } else {
-                    $insertQuery = "INSERT INTO users (username, email, password, role) 
-                                   VALUES (:username, :email, :password, :role)";
-                    $insertStmt = $conn->prepare($insertQuery);
+                    // Hash password
+                    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+                    
+                    // Check if full_name column exists
+                    $columnCheck = $conn->query("SHOW COLUMNS FROM users LIKE 'full_name'");
+                    $hasFullName = $columnCheck->rowCount() > 0;
+                    
+                    if ($hasFullName) {
+                        $insertQuery = "INSERT INTO users (username, email, password, full_name, role, created_at) 
+                                       VALUES (:username, :email, :password, :full_name, :role, NOW())";
+                        $insertStmt = $conn->prepare($insertQuery);
+                        $insertStmt->bindParam(':full_name', $full_name);
+                    } else {
+                        $insertQuery = "INSERT INTO users (username, email, password, role, created_at) 
+                                       VALUES (:username, :email, :password, :role, NOW())";
+                        $insertStmt = $conn->prepare($insertQuery);
+                    }
+                    
+                    $insertStmt->bindParam(':username', $username);
+                    $insertStmt->bindParam(':email', $email);
+                    $insertStmt->bindParam(':password', $hashedPassword);
+                    $insertStmt->bindParam(':role', $role);
+                    $insertStmt->execute();
+                    
+                    $success = "User added successfully!";
                 }
-                
-                $insertStmt->bindParam(':username', $username);
-                $insertStmt->bindParam(':email', $email);
-                $insertStmt->bindParam(':password', $hashedPassword);
-                $insertStmt->bindParam(':role', $role);
-                $insertStmt->execute();
-                
-                $success = "User added successfully!";
+            } catch (Exception $e) {
+                $error = "Error adding user: " . $e->getMessage();
             }
-        } catch (Exception $e) {
-            $error = "Error adding user: " . $e->getMessage();
         }
     }
     
@@ -127,18 +132,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user_id = $_POST['user_id'];
         $new_password = $_POST['new_password'];
         
-        try {
-            $hashedPassword = password_hash($new_password, PASSWORD_DEFAULT);
-            
-            $query = "UPDATE users SET password = :password WHERE id = :user_id";
-            $stmt = $conn->prepare($query);
-            $stmt->bindParam(':password', $hashedPassword);
-            $stmt->bindParam(':user_id', $user_id);
-            $stmt->execute();
-            
-            $success = "Password reset successfully!";
-        } catch (Exception $e) {
-            $error = "Error resetting password: " . $e->getMessage();
+        if (empty($new_password)) {
+            $error = "Please enter a new password.";
+        } else {
+            try {
+                $hashedPassword = password_hash($new_password, PASSWORD_DEFAULT);
+                
+                $query = "UPDATE users SET password = :password WHERE id = :user_id";
+                $stmt = $conn->prepare($query);
+                $stmt->bindParam(':password', $hashedPassword);
+                $stmt->bindParam(':user_id', $user_id);
+                $stmt->execute();
+                
+                $success = "Password reset successfully!";
+            } catch (Exception $e) {
+                $error = "Error resetting password: " . $e->getMessage();
+            }
         }
     }
 }

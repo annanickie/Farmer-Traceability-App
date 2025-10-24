@@ -349,7 +349,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="container header-content">
             <div class="logo">
                 <!-- PGP India Logo -->
-                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg=" alt="PGP India Logo">
+                <img src="https://pgpindia.co/wp-content/uploads/2021/10/WhatsApp_Image_2025-05-29_at_14.03.45_96bf6913-removebg-preview-e1749970605607.png" alt="PGP India Logo">
                 <h1>PGP Farmer Traceability</h1>
             </div>
         </div>
@@ -377,10 +377,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
                 
                 <form method="POST" action="">
-                    <div class="form-group">
-                        <label for="admin_code">Admin Authorization Code *</label>
-                        <input type="password" id="admin_code" name="admin_code" required>
-                    </div>
+                    
                     
                     <div class="form-group">
                         <label for="username">Username *</label>
@@ -416,22 +413,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input type="tel" id="phone" name="phone" value="<?php echo isset($phone) ? htmlspecialchars($phone) : ''; ?>">
                     </div>
                     
-                    <div class="form-group">
-                        <label for="admin_role">Admin Role *</label>
-                        <select id="admin_role" name="admin_role" required>
-                            <option value="">Select Admin Role</option>
-                            <option value="super_admin">Super Administrator</option>
-                            <option value="state_admin">State Administrator</option>
-                            <option value="district_admin">District Administrator</option>
-                            <option value="support_admin">Support Administrator</option>
-                        </select>
-                    </div>
+                    
                     
                     <button type="submit" class="btn">Register Admin Account</button>
                     
                     <div class="login-link">
                         <p>Already have an account? <a href="login.php">Login here</a></p>
-                        <p>Not an admin? <a href="register.php">Register as farmer</a></p>
+                        
                     </div>
                 </form>
             </div>
@@ -442,7 +430,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <footer>
         <div class="container footer-content">
             <div class="footer-logo">
-                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg=" alt="PGP India Logo">
+                <img src="https://pgpindia.co/wp-content/uploads/2021/10/WhatsApp_Image_2025-05-29_at_14.03.45_96bf6913-removebg-preview-e1749970605607.png" alt="PGP India Logo">
             </div>
             
             <div class="footer-links">

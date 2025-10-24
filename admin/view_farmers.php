@@ -18,6 +18,12 @@ if (!$auth->isLoggedIn() || !$auth->isAdmin()) {
 $database = new Database();
 $conn = $database->getConnection();
 
+// Handle Excel Export
+if (isset($_GET['export']) && $_GET['export'] == 'excel') {
+    exportFarmersToExcel($conn);
+    exit;
+}
+
 // Initialize variables
 $farmers = [];
 $error = '';
@@ -26,6 +32,8 @@ $search = '';
 $district_filter = '';
 $state_filter = '';
 $category_filter = '';
+$gender_filter = '';
+$product_filter = '';
 
 // Handle farmer deletion
 if (isset($_POST['delete_farmer'])) {
@@ -66,7 +74,7 @@ try {
     if (isset($_GET['search']) && !empty($_GET['search'])) {
         $search = $_GET['search'];
         $search_term = "%$search%";
-        $query .= " AND (farmer_name LIKE :search OR farmer_code LIKE :search OR village LIKE :search OR mobile LIKE :search)";
+        $query .= " AND (farmer_name LIKE :search OR farmer_code LIKE :search OR village LIKE :search OR mobile LIKE :search OR aadhaar LIKE :search)";
         $params[':search'] = $search_term;
     }
     
@@ -91,6 +99,20 @@ try {
         $params[':category'] = $category_filter;
     }
     
+    // Gender filter
+    if (isset($_GET['gender']) && !empty($_GET['gender'])) {
+        $gender_filter = $_GET['gender'];
+        $query .= " AND gender = :gender";
+        $params[':gender'] = $gender_filter;
+    }
+    
+    // Product filter
+    if (isset($_GET['product']) && !empty($_GET['product'])) {
+        $product_filter = $_GET['product'];
+        $query .= " AND product_name LIKE :product";
+        $params[':product'] = "%$product_filter%";
+    }
+    
     $query .= " ORDER BY created_at DESC";
     
     $stmt = $conn->prepare($query);
@@ -104,18 +126,244 @@ try {
     
     $farmers = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
-    // Get unique districts and states for filters
-    $districtQuery = "SELECT DISTINCT district FROM farmers WHERE district IS NOT NULL ORDER BY district";
-    $stateQuery = "SELECT DISTINCT state FROM farmers WHERE state IS NOT NULL ORDER BY state";
+    // Get unique values for filters with counts
+    $districtQuery = "SELECT district, COUNT(*) as count FROM farmers WHERE district IS NOT NULL AND district != '' GROUP BY district ORDER BY district";
+    $stateQuery = "SELECT state, COUNT(*) as count FROM farmers WHERE state IS NOT NULL AND state != '' GROUP BY state ORDER BY state";
+    $categoryQuery = "SELECT farmer_category, COUNT(*) as count FROM farmers WHERE farmer_category IS NOT NULL AND farmer_category != '' GROUP BY farmer_category ORDER BY farmer_category";
+    $genderQuery = "SELECT gender, COUNT(*) as count FROM farmers WHERE gender IS NOT NULL AND gender != '' GROUP BY gender ORDER BY gender";
+    $productQuery = "SELECT product_name, COUNT(*) as count FROM farmers WHERE product_name IS NOT NULL AND product_name != '' GROUP BY product_name ORDER BY product_name";
     
     $districtStmt = $conn->query($districtQuery);
     $stateStmt = $conn->query($stateQuery);
+    $categoryStmt = $conn->query($categoryQuery);
+    $genderStmt = $conn->query($genderQuery);
+    $productStmt = $conn->query($productQuery);
     
-    $districts = $districtStmt->fetchAll(PDO::FETCH_COLUMN);
-    $states = $stateStmt->fetchAll(PDO::FETCH_COLUMN);
+    $districts = $districtStmt->fetchAll(PDO::FETCH_ASSOC);
+    $states = $stateStmt->fetchAll(PDO::FETCH_ASSOC);
+    $categories = $categoryStmt->fetchAll(PDO::FETCH_ASSOC);
+    $genders = $genderStmt->fetchAll(PDO::FETCH_ASSOC);
+    $products = $productStmt->fetchAll(PDO::FETCH_ASSOC);
     
 } catch (Exception $e) {
     $error = "Database error: " . $e->getMessage();
+}
+
+// Excel Export Function with ALL database fields
+function exportFarmersToExcel($conn) {
+    try {
+        // Get all farmers data with ALL fields
+        $query = "SELECT 
+                    id,
+                    farmer_code,
+                    farmer_name,
+                    dob,
+                    age,
+                    gender,
+                    social_category,
+                    farmer_category,
+                    mobile,
+                    email,
+                    aadhaar,
+                    pan,
+                    full_address,
+                    village,
+                    block,
+                    district,
+                    state,
+                    pincode,
+                    land_area,
+                    area_unit,
+                    dag_no,
+                    patta_no,
+                    land_type,
+                    irrigation_source,
+                    account_holder,
+                    account_number,
+                    bank_name,
+                    bank_branch,
+                    ifsc_code,
+                    family_size,
+                    dependents,
+                    primary_occupation,
+                    training_received,
+                    training_subject,
+                    training_year,
+                    under_institute,
+                    institute_name,
+                    institute_address,
+                    contact_person,
+                    contact_number,
+                    farmer_potential,
+                    product_name,
+                    product_variety,
+                    production_mt,
+                    production_area,
+                    soil_report_path,
+                    sowing_time,
+                    harvesting_time,
+                    product_training,
+                    product_remarks,
+                    aadhaar_file_path,
+                    pan_file_path,
+                    passbook_file_path,
+                    land_docs_path,
+                    DATE(created_at) as registration_date,
+                    DATE(updated_at) as last_updated
+                  FROM farmers 
+                  ORDER BY created_at DESC";
+        
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $farmers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Set headers for Excel download
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment; filename="farmers_complete_data_' . date('Y-m-d') . '.xls"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        // Start Excel output
+        echo "<table border='1'>";
+        
+        // Header row with ALL your fields
+        echo "<tr style='background-color: #0e9c4d; color: white; font-weight: bold;'>";
+        echo "<th>ID</th>";
+        echo "<th>Farmer Code</th>";
+        echo "<th>Farmer Name</th>";
+        echo "<th>Date of Birth</th>";
+        echo "<th>Age</th>";
+        echo "<th>Gender</th>";
+        echo "<th>Social Category</th>";
+        echo "<th>Farmer Category</th>";
+        echo "<th>Mobile</th>";
+        echo "<th>Email</th>";
+        echo "<th>Aadhaar Number</th>";
+        echo "<th>PAN Number</th>";
+        echo "<th>Full Address</th>";
+        echo "<th>Village</th>";
+        echo "<th>Block</th>";
+        echo "<th>District</th>";
+        echo "<th>State</th>";
+        echo "<th>Pincode</th>";
+        echo "<th>Land Area</th>";
+        echo "<th>Area Unit</th>";
+        echo "<th>DAG Number</th>";
+        echo "<th>Patta Number</th>";
+        echo "<th>Land Type</th>";
+        echo "<th>Irrigation Source</th>";
+        echo "<th>Account Holder</th>";
+        echo "<th>Account Number</th>";
+        echo "<th>Bank Name</th>";
+        echo "<th>Bank Branch</th>";
+        echo "<th>IFSC Code</th>";
+        echo "<th>Family Size</th>";
+        echo "<th>Dependents</th>";
+        echo "<th>Primary Occupation</th>";
+        echo "<th>Training Received</th>";
+        echo "<th>Training Subject</th>";
+        echo "<th>Training Year</th>";
+        echo "<th>Under Institute</th>";
+        echo "<th>Institute Name</th>";
+        echo "<th>Institute Address</th>";
+        echo "<th>Contact Person</th>";
+        echo "<th>Contact Number</th>";
+        echo "<th>Farmer Potential</th>";
+        echo "<th>Product Name</th>";
+        echo "<th>Product Variety</th>";
+        echo "<th>Production (MT)</th>";
+        echo "<th>Production Area</th>";
+        echo "<th>Soil Report Path</th>";
+        echo "<th>Sowing Time</th>";
+        echo "<th>Harvesting Time</th>";
+        echo "<th>Product Training</th>";
+        echo "<th>Product Remarks</th>";
+        echo "<th>Aadhaar File Path</th>";
+        echo "<th>PAN File Path</th>";
+        echo "<th>Passbook File Path</th>";
+        echo "<th>Land Documents Path</th>";
+        echo "<th>Registration Date</th>";
+        echo "<th>Last Updated</th>";
+        echo "</tr>";
+        
+        // Data rows
+        foreach ($farmers as $farmer) {
+            echo "<tr>";
+            echo "<td>" . htmlspecialchars($farmer['id'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['farmer_code'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['farmer_name'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['dob'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['age'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['gender'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['social_category'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['farmer_category'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['mobile'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['email'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['aadhaar'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['pan'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['full_address'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['village'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['block'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['district'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['state'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['pincode'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['land_area'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['area_unit'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['dag_no'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['patta_no'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['land_type'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['irrigation_source'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['account_holder'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['account_number'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['bank_name'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['bank_branch'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['ifsc_code'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['family_size'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['dependents'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['primary_occupation'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['training_received'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['training_subject'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['training_year'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['under_institute'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['institute_name'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['institute_address'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['contact_person'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['contact_number'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['farmer_potential'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['product_name'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['product_variety'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['production_mt'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['production_area'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['soil_report_path'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['sowing_time'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['harvesting_time'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['product_training'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['product_remarks'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['aadhaar_file_path'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['pan_file_path'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['passbook_file_path'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['land_docs_path'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['registration_date'] ?? '') . "</td>";
+            echo "<td>" . htmlspecialchars($farmer['last_updated'] ?? '') . "</td>";
+            echo "</tr>";
+        }
+        
+        echo "</table>";
+        exit;
+        
+    } catch (Exception $e) {
+        // Log error
+        error_log("Excel export error: " . $e->getMessage());
+        
+        // Show error in Excel file
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment; filename="farmers_data_' . date('Y-m-d') . '.xls"');
+        echo "<table border='1'>";
+        echo "<tr><th>Error</th></tr>";
+        echo "<tr><td>Failed to export data: " . htmlspecialchars($e->getMessage()) . "</td></tr>";
+        echo "</table>";
+        exit;
+    }
 }
 ?>
 
@@ -258,12 +506,24 @@ try {
             border-color: var(--secondary-color);
         }
         
+        .btn-excel {
+            background-color: #1d6f42;
+            border-color: #1d6f42;
+            color: white;
+        }
+        
+        .btn-excel:hover {
+            background-color: #155f35;
+            border-color: #155f35;
+            color: white;
+        }
+        
         .btn-danger {
             background-color: #dc3545;
             border-color: #dc3545;
         }
         
-        /* Filter Section */
+        /* Enhanced Filter Section */
         .filter-section {
             background-color: white;
             box-shadow: var(--shadow);
@@ -275,6 +535,58 @@ try {
         .filter-section h5 {
             color: var(--primary-color);
             margin-bottom: 15px;
+        }
+        
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .filter-group {
+            margin-bottom: 0;
+        }
+        
+        .filter-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--dark-color);
+            font-size: 14px;
+        }
+        
+        .filter-count {
+            font-size: 12px;
+            color: #6c757d;
+            margin-left: 5px;
+        }
+        
+        .form-select-enhanced {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            padding: 8px 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-select-enhanced:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(14, 156, 77, 0.25);
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        .search-box .form-control {
+            padding-left: 40px;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
         }
         
         /* Stats Cards */
@@ -291,6 +603,11 @@ try {
             box-shadow: var(--shadow);
             padding: 15px;
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
         }
         
         .stat-number {
@@ -329,6 +646,7 @@ try {
         .table th {
             background-color: #f8f9fa;
             font-weight: 600;
+            border-bottom: 2px solid var(--primary-color);
         }
         
         .table-hover tbody tr:hover {
@@ -366,6 +684,30 @@ try {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+        
+        /* Active Filter Badges */
+        .active-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .filter-badge {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .filter-badge .remove {
+            cursor: pointer;
+            font-weight: bold;
         }
         
         /* Responsive Design */
@@ -412,6 +754,14 @@ try {
             }
             
             .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .filter-row {
                 grid-template-columns: 1fr;
             }
         }
@@ -490,48 +840,161 @@ try {
                 </div>
             </div>
             
-            <!-- Filter Section -->
+            <!-- Enhanced Filter Section -->
             <div class="filter-section">
-                <h5><i class="fas fa-filter me-2"></i> Filter Farmers</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="fas fa-filter me-2"></i> Filter Farmers</h5>
+                    <div>
+                        <!-- Excel Export Button -->
+                        <a href="?export=excel" class="btn btn-excel">
+                            <i class="fas fa-file-excel me-1"></i> Export to Excel
+                        </a>
+                    </div>
+                </div>
+                
                 <form method="GET" action="">
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <input type="text" class="form-control" name="search" placeholder="Search by name, code, village..." value="<?php echo htmlspecialchars($search); ?>">
+                    <div class="filter-row">
+                        <!-- Search Box -->
+                        <div class="filter-group search-box">
+                            <label for="search">Search Farmers</label>
+                            <div class="position-relative">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="form-control" id="search" name="search" 
+                                       placeholder="Search by name, code, village, Aadhaar..." 
+                                       value="<?php echo htmlspecialchars($search); ?>">
+                            </div>
                         </div>
-                        <div class="col-md-2">
-                            <select class="form-select" name="district">
-                                <option value="">All Districts</option>
-                                <?php foreach ($districts as $district): ?>
-                                    <option value="<?php echo htmlspecialchars($district); ?>" <?php echo $district_filter === $district ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($district); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="col-md-2">
-                            <select class="form-select" name="state">
+                        
+                        <!-- State Filter -->
+                        <div class="filter-group">
+                            <label for="state">State <span class="filter-count">(<?php echo count($states); ?>)</span></label>
+                            <select class="form-select form-select-enhanced" id="state" name="state">
                                 <option value="">All States</option>
                                 <?php foreach ($states as $state): ?>
-                                    <option value="<?php echo htmlspecialchars($state); ?>" <?php echo $state_filter === $state ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($state); ?>
+                                    <option value="<?php echo htmlspecialchars($state['state']); ?>" 
+                                            <?php echo $state_filter === $state['state'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($state['state']); ?> (<?php echo $state['count']; ?>)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <select class="form-select" name="category">
-                                <option value="">All Categories</option>
-                                <option value="Big Farmer" <?php echo $category_filter === 'Big Farmer' ? 'selected' : ''; ?>>Big Farmer</option>
-                                <option value="Marginal Farmer" <?php echo $category_filter === 'Marginal Farmer' ? 'selected' : ''; ?>>Marginal Farmer</option>
-                                <option value="Small Farmer" <?php echo $category_filter === 'Small Farmer' ? 'selected' : ''; ?>>Small Farmer</option>
-                                <option value="Others" <?php echo $category_filter === 'Others' ? 'selected' : ''; ?>>Others</option>
+                        
+                        <!-- District Filter -->
+                        <div class="filter-group">
+                            <label for="district">District <span class="filter-count">(<?php echo count($districts); ?>)</span></label>
+                            <select class="form-select form-select-enhanced" id="district" name="district">
+                                <option value="">All Districts</option>
+                                <?php foreach ($districts as $district): ?>
+                                    <option value="<?php echo htmlspecialchars($district['district']); ?>" 
+                                            <?php echo $district_filter === $district['district'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($district['district']); ?> (<?php echo $district['count']; ?>)
+                                    </option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-success me-2"><i class="fas fa-search me-1"></i> Apply Filters</button>
-                            <a href="view_farmers.php" class="btn btn-outline-secondary"><i class="fas fa-sync me-1"></i> Reset</a>
+                    </div>
+                    
+                    <div class="filter-row">
+                        <!-- Category Filter -->
+                        <div class="filter-group">
+                            <label for="category">Farmer Category <span class="filter-count">(<?php echo count($categories); ?>)</span></label>
+                            <select class="form-select form-select-enhanced" id="category" name="category">
+                                <option value="">All Categories</option>
+                                <?php foreach ($categories as $category): ?>
+                                    <option value="<?php echo htmlspecialchars($category['farmer_category']); ?>" 
+                                            <?php echo $category_filter === $category['farmer_category'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($category['farmer_category']); ?> (<?php echo $category['count']; ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Gender Filter -->
+                        <div class="filter-group">
+                            <label for="gender">Gender <span class="filter-count">(<?php echo count($genders); ?>)</span></label>
+                            <select class="form-select form-select-enhanced" id="gender" name="gender">
+                                <option value="">All Genders</option>
+                                <?php foreach ($genders as $gender): ?>
+                                    <option value="<?php echo htmlspecialchars($gender['gender']); ?>" 
+                                            <?php echo $gender_filter === $gender['gender'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($gender['gender']); ?> (<?php echo $gender['count']; ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <!-- Product Filter -->
+                        <div class="filter-group">
+                            <label for="product">Product <span class="filter-count">(<?php echo count($products); ?>)</span></label>
+                            <select class="form-select form-select-enhanced" id="product" name="product">
+                                <option value="">All Products</option>
+                                <?php foreach ($products as $product): ?>
+                                    <option value="<?php echo htmlspecialchars($product['product_name']); ?>" 
+                                            <?php echo $product_filter === $product['product_name'] ? 'selected' : ''; ?>>
+                                        <?php echo htmlspecialchars($product['product_name']); ?> (<?php echo $product['count']; ?>)
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                     </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <button type="submit" class="btn btn-success me-2">
+                                <i class="fas fa-search me-1"></i> Apply Filters
+                            </button>
+                            <a href="view_farmers.php" class="btn btn-outline-secondary">
+                                <i class="fas fa-sync me-1"></i> Reset All
+                            </a>
+                        </div>
+                        <div class="text-muted small">
+                            Showing <?php echo count($farmers); ?> farmers
+                        </div>
+                    </div>
+                    
+                    <!-- Active Filters -->
+                    <?php if ($search || $district_filter || $state_filter || $category_filter || $gender_filter || $product_filter): ?>
+                    <div class="active-filters mt-3">
+                        <strong>Active Filters:</strong>
+                        <?php if ($search): ?>
+                            <span class="filter-badge">
+                                Search: "<?php echo htmlspecialchars($search); ?>"
+                                <a href="?<?php echo http_build_query(array_merge($_GET, ['search' => ''])); ?>" class="remove text-white">×</a>
+                            </span>
+                        <?php endif; ?>
+                        <?php if ($state_filter): ?>
+                            <span class="filter-badge">
+                                State: <?php echo htmlspecialchars($state_filter); ?>
+                                <a href="?<?php echo http_build_query(array_merge($_GET, ['state' => ''])); ?>" class="remove text-white">×</a>
+                            </span>
+                        <?php endif; ?>
+                        <?php if ($district_filter): ?>
+                            <span class="filter-badge">
+                                District: <?php echo htmlspecialchars($district_filter); ?>
+                                <a href="?<?php echo http_build_query(array_merge($_GET, ['district' => ''])); ?>" class="remove text-white">×</a>
+                            </span>
+                        <?php endif; ?>
+                        <?php if ($category_filter): ?>
+                            <span class="filter-badge">
+                                Category: <?php echo htmlspecialchars($category_filter); ?>
+                                <a href="?<?php echo http_build_query(array_merge($_GET, ['category' => ''])); ?>" class="remove text-white">×</a>
+                            </span>
+                        <?php endif; ?>
+                        <?php if ($gender_filter): ?>
+                            <span class="filter-badge">
+                                Gender: <?php echo htmlspecialchars($gender_filter); ?>
+                                <a href="?<?php echo http_build_query(array_merge($_GET, ['gender' => ''])); ?>" class="remove text-white">×</a>
+                            </span>
+                        <?php endif; ?>
+                        <?php if ($product_filter): ?>
+                            <span class="filter-badge">
+                                Product: <?php echo htmlspecialchars($product_filter); ?>
+                                <a href="?<?php echo http_build_query(array_merge($_GET, ['product' => ''])); ?>" class="remove text-white">×</a>
+                            </span>
+                        <?php endif; ?>
+                    </div>
+                    <?php endif; ?>
                 </form>
             </div>
             
@@ -539,9 +1002,7 @@ try {
             <div class="table-container">
                 <div class="table-header">
                     <h5 class="mb-0"><i class="fas fa-list me-2"></i> Farmers List</h5>
-                    <a href="add_farmer.php" class="btn btn-sm btn-light">
-                        <i class="fas fa-plus me-1"></i> Add New Farmer
-                    </a>
+                    <span class="badge bg-light text-dark"><?php echo count($farmers); ?> Farmers</span>
                 </div>
                 
                 <div class="table-responsive">
@@ -549,11 +1010,12 @@ try {
                         <thead>
                             <tr>
                                 <th>Farmer Code</th>
-                                <th>Name</th>
+                                <th>Name & Details</th>
                                 <th>Contact</th>
                                 <th>Location</th>
                                 <th>Category</th>
                                 <th>Land Area</th>
+                                <th>Product</th>
                                 <th>Registered On</th>
                                 <th>Actions</th>
                             </tr>
@@ -565,13 +1027,21 @@ try {
                                         <td>
                                             <span class="badge bg-success"><?php echo htmlspecialchars($farmer['farmer_code']); ?></span>
                                         </td>
-                                        <td><?php echo htmlspecialchars($farmer['farmer_name']); ?></td>
+                                        <td>
+                                            <strong><?php echo htmlspecialchars($farmer['farmer_name']); ?></strong>
+                                            <?php if (!empty($farmer['gender'])): ?>
+                                                <br><small class="text-muted"><?php echo htmlspecialchars($farmer['gender']); ?></small>
+                                            <?php endif; ?>
+                                            <?php if (!empty($farmer['age'])): ?>
+                                                <br><small class="text-muted">Age: <?php echo htmlspecialchars($farmer['age']); ?></small>
+                                            <?php endif; ?>
+                                        </td>
                                         <td>
                                             <?php if (!empty($farmer['mobile'])): ?>
-                                                <div><?php echo htmlspecialchars($farmer['mobile']); ?></div>
+                                                <div><i class="fas fa-phone me-1"></i><?php echo htmlspecialchars($farmer['mobile']); ?></div>
                                             <?php endif; ?>
                                             <?php if (!empty($farmer['email'])): ?>
-                                                <div class="small text-muted"><?php echo htmlspecialchars($farmer['email']); ?></div>
+                                                <div class="small text-muted"><i class="fas fa-envelope me-1"></i><?php echo htmlspecialchars($farmer['email']); ?></div>
                                             <?php endif; ?>
                                         </td>
                                         <td>
@@ -579,6 +1049,9 @@ try {
                                             <div class="small text-muted">
                                                 <?php echo htmlspecialchars($farmer['district']); ?>, <?php echo htmlspecialchars($farmer['state']); ?>
                                             </div>
+                                            <?php if (!empty($farmer['block'])): ?>
+                                                <div class="small text-muted">Block: <?php echo htmlspecialchars($farmer['block']); ?></div>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <span class="badge bg-info"><?php echo htmlspecialchars($farmer['farmer_category']); ?></span>
@@ -586,6 +1059,16 @@ try {
                                         <td>
                                             <?php if (!empty($farmer['land_area'])): ?>
                                                 <?php echo htmlspecialchars($farmer['land_area']); ?> <?php echo htmlspecialchars($farmer['area_unit']); ?>
+                                            <?php else: ?>
+                                                <span class="text-muted">N/A</span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if (!empty($farmer['product_name'])): ?>
+                                                <div><?php echo htmlspecialchars($farmer['product_name']); ?></div>
+                                                <?php if (!empty($farmer['product_variety'])): ?>
+                                                    <div class="small text-muted"><?php echo htmlspecialchars($farmer['product_variety']); ?></div>
+                                                <?php endif; ?>
                                             <?php else: ?>
                                                 <span class="text-muted">N/A</span>
                                             <?php endif; ?>
@@ -613,12 +1096,12 @@ try {
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="8" class="text-center py-4">
+                                    <td colspan="9" class="text-center py-4">
                                         <i class="fas fa-users fa-2x text-muted mb-3"></i>
                                         <h5>No farmers found</h5>
                                         <p class="text-muted">No farmers match your search criteria.</p>
-                                        <a href="add_farmer.php" class="btn btn-success">
-                                            <i class="fas fa-plus me-1"></i> Add First Farmer
+                                        <a href="?export=excel" class="btn btn-excel mt-2">
+                                            <i class="fas fa-file-excel me-1"></i> Export All Farmers to Excel
                                         </a>
                                     </td>
                                 </tr>
@@ -631,5 +1114,20 @@ try {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-submit form when filters change (optional)
+        document.addEventListener('DOMContentLoaded', function() {
+            const filters = ['state', 'district', 'category', 'gender', 'product'];
+            
+            filters.forEach(filter => {
+                const element = document.getElementById(filter);
+                if (element) {
+                    element.addEventListener('change', function() {
+                        this.form.submit();
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

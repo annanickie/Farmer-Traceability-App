@@ -487,8 +487,7 @@ $isNewFarmer = ($totalCultivations == 0);
                 <li><a href="dashboard.php" class="active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
                 <li><a href="farmer_registration.php"><i class="fas fa-user-plus"></i> Farmer Registration</a></li>
                 <li><a href="cultivation_form.php"><i class="fas fa-seedling"></i> Cultivation Form</a></li>
-                <li><a href="history.php"><i class="fas fa-history"></i> History</a></li>
-                
+                <li><a href="vendor_registration.php"><i class="fas fa-history"></i> Vendor Registration</a></li>
                 <li><a href="../logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </div>

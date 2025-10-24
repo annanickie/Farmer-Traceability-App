@@ -490,4 +490,113 @@ try {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="district_code">District Code (2-3 letters)</label> <input type="text" id="district_code" name="district_code" maxlength="3" required placeholder="e.g., MUM for Mumbai"> </div> <div class="form-group"> <label for="district_name">District Name</label> <input type="text" id="district_name" name="district_name" required placeholder="e.g., Mumbai"> </div> <button type="submit" name="add_district" class="btn">Add District</button> </form> </div><!-- Districts List --><div class="card"> <div class="card-header"> <i class="fas fa-list"></i> <h3>All Districts</h3> </div> <div class="table-container"> <table> <thead> <tr> <th>ID</th> <th>State</th> <th>District Code</th> <th>District Name</th> <th>Status</th> <th>Actions</th> </tr> </thead> <tbody> <?php if (count($districts) > 0): ?> <?php foreach ($districts as $district): ?> <tr> <td><?php echo $district['id']; ?></td> <td><?php echo htmlspecialchars($district['state_code'] . ' - ' . $district['state_name']); ?></td> <td><?php echo htmlspecialchars($district['district_code']); ?></td> <td><?php echo htmlspecialchars($district['district_name']); ?></td> <td> <span class="status-toggle <?php echo $district['is_active'] ? 'status-active' : 'status-inactive'; ?>"> <?php echo $district['is_active'] ? 'Active' : 'Inactive'; ?> </span> </td> <td> <form method="POST" style="display: inline;"> <input type="hidden" name="district_id" value="<?php echo $district['id']; ?>"> <input type="hidden" name="is_active" value="<?php echo $district['is_active']; ?>"> <button type="submit" name="toggle_district" class="btn btn-sm"> <?php echo $district['is_active'] ? 'Deactivate' : 'Activate'; ?> </button> </form> </td> </tr> <?php endforeach; ?> <?php else: ?> <tr> <td colspan="6" style="text-align: center;">No districts found. Please add districts.</td> </tr> <?php endif; ?> </tbody> </table> </div> </div> </div> </div><script> // Simple form validation document.addEventListener('DOMContentLoaded', function() { const form = document.querySelector('form'); if (form) { form.addEventListener('submit', function(e) { const stateSelect = document.getElementById('state_id'); const districtCode = document.getElementById('district_code'); const districtName = document.getElementById('district_name'); if (stateSelect.value === '') { e.preventDefault(); alert('Please select a state.'); stateSelect.focus(); return false; } if (districtCode.value.trim() === '') { e.preventDefault(); alert('Please enter a district code.'); districtCode.focus(); return false; } if (districtName.value.trim() === '') { e.preventDefault(); alert('Please enter a district name.'); districtName.focus(); return false; } // Validate district code format (2-3 uppercase letters) const codeRegex = /^[A-Z]{2,3}$/; if (!codeRegex.test(districtCode.value.trim())) { e.preventDefault(); alert('District code must be 2-3 uppercase letters.'); districtCode.focus(); return false; } }); } }); </script></body> </html>
+                        <label for="district_code">District Code (2-3 letters)</label>
+                        <input type="text" id="district_code" name="district_code" maxlength="3" required placeholder="e.g., MUM for Mumbai">
+                    </div>
+                    <div class="form-group">
+                        <label for="district_name">District Name</label>
+                        <input type="text" id="district_name" name="district_name" required placeholder="e.g., Mumbai">
+                    </div>
+                    <button type="submit" name="add_district" class="btn">Add District</button>
+                </form>
+            </div>
+
+            <!-- Districts List -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-list"></i>
+                    <h3>All Districts</h3>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>State</th>
+                                <th>District Code</th>
+                                <th>District Name</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($districts) > 0): ?>
+                                <?php foreach ($districts as $district): ?>
+                                    <tr>
+                                        <td><?php echo $district['id']; ?></td>
+                                        <td><?php echo htmlspecialchars($district['state_code'] . ' - ' . $district['state_name']); ?></td>
+                                        <td><?php echo htmlspecialchars($district['district_code']); ?></td>
+                                        <td><?php echo htmlspecialchars($district['district_name']); ?></td>
+                                        <td>
+                                            <span class="status-toggle <?php echo $district['is_active'] ? 'status-active' : 'status-inactive'; ?>">
+                                                <?php echo $district['is_active'] ? 'Active' : 'Inactive'; ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <form method="POST" style="display: inline;">
+                                                <input type="hidden" name="district_id" value="<?php echo $district['id']; ?>">
+                                                <input type="hidden" name="is_active" value="<?php echo $district['is_active']; ?>">
+                                                <button type="submit" name="toggle_district" class="btn btn-sm">
+                                                    <?php echo $district['is_active'] ? 'Deactivate' : 'Activate'; ?>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" style="text-align: center;">No districts found. Please add districts.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple form validation
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const stateSelect = document.getElementById('state_id');
+                    const districtCode = document.getElementById('district_code');
+                    const districtName = document.getElementById('district_name');
+                    
+                    if (stateSelect.value === '') {
+                        e.preventDefault();
+                        alert('Please select a state.');
+                        stateSelect.focus();
+                        return false;
+                    }
+                    
+                    if (districtCode.value.trim() === '') {
+                        e.preventDefault();
+                        alert('Please enter a district code.');
+                        districtCode.focus();
+                        return false;
+                    }
+                    
+                    if (districtName.value.trim() === '') {
+                        e.preventDefault();
+                        alert('Please enter a district name.');
+                        districtName.focus();
+                        return false;
+                    }
+                    
+                    // Validate district code format (2-3 uppercase letters)
+                    const codeRegex = /^[A-Z]{2,3}$/;
+                    if (!codeRegex.test(districtCode.value.trim())) {
+                        e.preventDefault();
+                        alert('District code must be 2-3 uppercase letters.');
+                        districtCode.focus();
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

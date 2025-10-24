@@ -274,7 +274,7 @@
         <div class="container header-content">
             <div class="logo">
                 <!-- PGP India Logo -->
-                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMwZTljNGQiLz48cGF0aCBkPSJNMjUgMjVINTBWNjVIMjVWNjVINDBWNDBIMjVWMjVaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik01MCAyNVY0MEg3NVYyNUg1MFpNNzUgNDBWNjVINjIuNVY1Mi41SDUwVjY1SDM3LjVWNTIuNUgyNVY2NUg3NVY0MFoiIGZpbGw9IndoaXRlIi8+PC9zdmc+" alt="PGP India Logo">
+                <img src="https://pgpindia.co/wp-content/uploads/2021/10/WhatsApp_Image_2025-05-29_at_14.03.45_96bf6913-removebg-preview-e1749970605607.png" alt="PGP India Logo">
                 <h1>PGP Farmer Traceability</h1>
             </div>
         </div>
@@ -321,9 +321,7 @@
                 </a>
             </div>
             
-            <div style="margin-top: 40px; padding: 20px; background: rgba(14, 156, 77, 0.1); border-radius: 10px;">
-                <p style="margin: 0; color: #555;">Are you an administrator? <a href="admin_register.php" style="color: var(--primary-color); font-weight: 600;">Register as admin here</a></p>
-            </div>
+            
         </div>
     </main>
 
@@ -331,7 +329,7 @@
     <footer>
         <div class="container footer-content">
             <div class="footer-logo">
-                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMwZTljNGQiLz48cGF0aCBkPSJNMjUgMjVINTBWNjVIMjVWNjVINDBWNDBIMjVWMjVaIiBmaWxsPSJ3aGl0ZSIvPjxwYXRoIGQ9Ik01MCAyNVY0MEg3NVYyNUg1MFpNNzUgNDBWNjVINjIuNVY1Mi41SDUwVjY1SDM3LjVWNTIuNUgyNVY2NUg3NVY0MFoiIGZpbGw9IndoaXRlIi8+PC9zdmc+" alt="PGP India Logo">
+                <img src="https://pgpindia.co/wp-content/uploads/2021/10/WhatsApp_Image_2025-05-29_at_14.03.45_96bf6913-removebg-preview-e1749970605607.png" alt="PGP India Logo">
             </div>
             
             <div class="footer-links">
@@ -342,7 +340,7 @@
                 <a href="#">FAQ</a>
             </div>
             
-            <p class="copyright">&copy; 2023 PGP India. All rights reserved.</p>
+            <p class="copyright">&copy; 2020 PGP India. All rights reserved.</p>
         </div>
     </footer>
 </body>
